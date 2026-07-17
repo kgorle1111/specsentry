@@ -1,0 +1,12 @@
+[project]
+name = "specsentry"
+version = "0.1.0"
+description = "Spec-to-bid-deliverables extractor for industrial coatings contractors — cites or flags, never guesses, never prices"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

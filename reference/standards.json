@@ -1,0 +1,16 @@
+{
+  "_note": "kn: curated citation-only reference — 'spec says X, standard is Y' lookups. Grow it from the pilot contractor's actual spec library; never interpret, only cite.",
+  "SSPC-SP1": "Solvent Cleaning — removal of oil, grease, soil prior to blast",
+  "SSPC-SP2": "Hand Tool Cleaning",
+  "SSPC-SP3": "Power Tool Cleaning",
+  "SSPC-SP5": "White Metal Blast Cleaning (NACE 1 equivalent)",
+  "SSPC-SP6": "Commercial Blast Cleaning (NACE 3 equivalent)",
+  "SSPC-SP7": "Brush-Off Blast Cleaning (NACE 4 equivalent)",
+  "SSPC-SP10": "Near-White Metal Blast Cleaning (NACE 2 equivalent)",
+  "SSPC-SP11": "Power Tool Cleaning to Bare Metal",
+  "SSPC-SP16": "Brush-Off Blast of Non-Ferrous Metals",
+  "NACE 1": "White Metal (SSPC-SP5 equivalent)",
+  "NACE 2": "Near-White Metal (SSPC-SP10 equivalent)",
+  "NACE 3": "Commercial (SSPC-SP6 equivalent)",
+  "NACE 4": "Brush-Off (SSPC-SP7 equivalent)"
+}

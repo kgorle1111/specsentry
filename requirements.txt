@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+anthropic
+python-multipart   # PDF upload
+pypdf              # spec text extraction
+python-docx        # inspection package deliverable

@@ -1,0 +1,19 @@
+# secrets
+.env
+
+# client data — specs are bid-confidential
+uploads/
+deliverables/
+receipts.jsonl
+evals/results/
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# editor / OS
+.idea/
+.vscode/
+.DS_Store
