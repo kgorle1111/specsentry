@@ -77,6 +77,32 @@ def mock_pipeline(monkeypatch, extraction):
 PDF = ("pdf", ("spec.pdf", io.BytesIO(b"%PDF-1.4 fake"), "application/pdf"))
 
 
+class TestSpecTracking:
+    def test_list_and_summary(self, mock_pipeline):
+        client.post("/specs", files=[PDF])
+        rows = client.get("/specs").json()
+        assert len(rows) == 1
+        s = rows[0]
+        assert s["pages"] == 3 and s["coat_systems"] >= 1 and "review_flags" in s and s["title"]
+
+    def test_persistence_survives_reload(self, mock_pipeline, isolate_files):
+        job = client.post("/specs", files=[PDF]).json()["job"]
+        assert (isolate_files / "data" / f"{job}.json").exists()
+        main._SPECS.clear()
+        assert main.load_all() == 1
+        assert main.get_spec(job)["job"] == job
+
+    def test_corrupt_snapshot_skipped(self, mock_pipeline, isolate_files):
+        client.post("/specs", files=[PDF])
+        (isolate_files / "data" / "broken.json").write_text("{bad")
+        main._SPECS.clear()
+        assert main.load_all() == 1
+
+    def test_index_serves_html_shell(self):
+        r = client.get("/")
+        assert r.status_code == 200 and "SpecSentry" in r.text
+
+
 class TestEndpoints:
     def test_upload_processes_and_merges(self, mock_pipeline):
         r = client.post("/specs", files=[PDF])

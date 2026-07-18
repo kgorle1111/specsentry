@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpecSentry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF8F4; --surface:#FFFFFF; --surface-2:#F3EFE8; --surface-3:#EDE8DF;
+  --ink:#211E1A; --ink-2:#635E55; --ink-3:#9A9488;
+  --line:#E7E2D8; --line-2:#D8D2C6;
+  --accent:#33574E; --accent-hover:#2A4A42; --accent-soft:#E7EEEB; --on-accent:#FFFFFF;
+  --flag:#8A5A1F; --flag-soft:#F5EBDA; --flag-line:#E3D3B4;
+  --ok:#3E6B4F; --ok-soft:#E7F0E9; --ok-line:#CBE0D0;
+  --danger:#9E3B2E; --danger-soft:#F4E5E1;
+  --ring:rgba(51,87,78,.30);
+  --shadow-sm:0 1px 2px rgba(33,30,26,.05);
+  --shadow:0 1px 2px rgba(33,30,26,.05), 0 10px 30px -18px rgba(33,30,26,.28);
+  --shadow-lg:0 24px 60px -24px rgba(33,30,26,.40);
+  --r-sm:8px; --r:12px; --r-lg:18px;
+  --sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --serif:'Spectral',Georgia,'Times New Roman',serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+:root[data-theme="dark"]{
+  --paper:#16150F; --surface:#201E19; --surface-2:#26231D; --surface-3:#2E2A22;
+  --ink:#F1ECE1; --ink-2:#ADA695; --ink-3:#7C766A; --line:#332F27; --line-2:#413B31;
+  --accent:#7FB1A2; --accent-hover:#93BEB0; --accent-soft:#22302B; --on-accent:#10201C;
+  --flag:#D8A863; --flag-soft:#2C2618; --flag-line:#463A22; --ok:#8FC0A0; --ok-soft:#1E2A21; --ok-line:#31432F;
+  --danger:#DE9083; --danger-soft:#2E1E1A; --ring:rgba(127,177,162,.35);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -18px rgba(0,0,0,.6); --shadow-lg:0 28px 70px -24px rgba(0,0,0,.7);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#16150F; --surface:#201E19; --surface-2:#26231D; --surface-3:#2E2A22;
+  --ink:#F1ECE1; --ink-2:#ADA695; --ink-3:#7C766A; --line:#332F27; --line-2:#413B31;
+  --accent:#7FB1A2; --accent-hover:#93BEB0; --accent-soft:#22302B; --on-accent:#10201C;
+  --flag:#D8A863; --flag-soft:#2C2618; --flag-line:#463A22; --ok:#8FC0A0; --ok-soft:#1E2A21; --ok-line:#31432F;
+  --danger:#DE9083; --danger-soft:#2E1E1A; --ring:rgba(127,177,162,.35);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -18px rgba(0,0,0,.6); --shadow-lg:0 28px 70px -24px rgba(0,0,0,.7);
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:-.01em; margin:0}
+button{font:inherit; cursor:pointer} input,textarea,select{font:inherit; color:var(--ink)}
+a{color:var(--accent); text-decoration:none} a:hover{text-decoration:underline}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:none; box-shadow:0 0 0 3px var(--ring); border-radius:6px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+
+.topbar{position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:16px; padding:14px clamp(16px,4vw,40px); background:color-mix(in srgb, var(--paper) 84%, transparent); backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line)}
+.brand{display:flex; align-items:center; gap:11px; min-width:0; cursor:pointer}
+.brand .mark{width:34px; height:34px; flex:none; border-radius:9px; background:linear-gradient(155deg,var(--accent),var(--accent-hover)); display:grid; place-items:center; color:var(--on-accent); box-shadow:var(--shadow-sm)}
+.brand .mark svg{width:19px; height:19px}
+.brand .name{font-family:var(--serif); font-size:19px; font-weight:600; line-height:1.1; white-space:nowrap}
+.brand .sub{font-size:11.5px; color:var(--ink-3); letter-spacing:.02em}
+.topbar .spacer{flex:1}
+@media (max-width:640px){.topbar{gap:10px; padding:12px 16px} .brand .sub{display:none} .brand .name{font-size:16px}}
+.iconbtn{width:38px; height:38px; display:grid; place-items:center; border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2); border-radius:10px; transition:background .18s,color .18s,border-color .18s}
+.iconbtn:hover{background:var(--surface-2); color:var(--ink); border-color:var(--ink-3)}
+.iconbtn svg{width:18px; height:18px}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:42px; padding:0 18px; border-radius:10px; border:1px solid transparent; font-weight:600; font-size:14px; white-space:nowrap; transition:background .18s,color .18s,border-color .18s,box-shadow .18s,transform .06s}
+.btn:active{transform:translateY(1px)} .btn svg{width:17px; height:17px}
+.btn.primary{background:var(--accent); color:var(--on-accent); box-shadow:var(--shadow-sm)} .btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{background:var(--surface); color:var(--ink); border-color:var(--line-2)} .btn.ghost:hover{background:var(--surface-2); border-color:var(--ink-3)}
+.btn.subtle{background:var(--surface-2); color:var(--ink)} .btn.subtle:hover{background:var(--surface-3)}
+.btn[disabled]{opacity:.45; pointer-events:none}
+.btn.sm{height:36px; padding:0 14px; font-size:13.5px}
+
+.wrap{max-width:1180px; margin:0 auto; padding:clamp(20px,3vw,36px) clamp(16px,4vw,40px) 80px}
+.chip{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:999px; white-space:nowrap; flex:none}
+.chip svg{width:12px; height:12px}
+.chip.flag{background:var(--flag-soft); color:var(--flag); border:1px solid var(--flag-line)}
+.chip.ok{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok-line)}
+.chip.neutral{background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line-2)}
+
+.page-head{display:flex; align-items:center; gap:16px; margin-bottom:22px; flex-wrap:wrap}
+.page-head h1{font-size:27px} .page-head .spacer{flex:1}
+.dash{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px}
+@media (max-width:760px){.dash{grid-template-columns:repeat(2,1fr)}}
+.dcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); padding:16px 18px}
+.dcard .v{font-size:27px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.05}
+.dcard .v.flag{color:var(--flag)}
+.dcard .k{font-size:12.5px; color:var(--ink-3); margin-top:3px}
+
+.dropzone{border:1.5px dashed var(--line-2); border-radius:var(--r-lg); background:var(--surface); padding:34px 24px; text-align:center; transition:border-color .18s,background .18s; cursor:pointer; margin-bottom:22px}
+.dropzone:hover{border-color:var(--accent); background:var(--accent-soft)}
+.dropzone.over{border-color:var(--accent); background:var(--accent-soft); border-style:solid}
+.dropzone .di{width:48px; height:48px; margin:0 auto 10px; border-radius:13px; background:var(--surface-2); display:grid; place-items:center; color:var(--accent); border:1px solid var(--line)}
+.dropzone .di svg{width:24px; height:24px}
+.dropzone b{font-size:15px; font-family:var(--serif)}
+.dropzone span{display:block; font-size:12.5px; color:var(--ink-3); margin-top:3px}
+.processing{display:flex; align-items:center; justify-content:center; gap:10px; font-size:13.5px; color:var(--ink-2)}
+.spin{width:16px;height:16px;border:2px solid var(--line-2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.specs{display:flex; flex-direction:column; gap:10px}
+.srow{display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); padding:15px 18px; cursor:pointer; transition:border-color .18s,box-shadow .18s,transform .06s; text-align:left; width:100%}
+.srow:hover{border-color:var(--line-2); box-shadow:var(--shadow)} .srow:active{transform:translateY(1px)}
+.srow .pi{width:42px; height:42px; flex:none; border-radius:11px; background:var(--surface-2); display:grid; place-items:center; color:var(--accent)}
+.srow .pi svg{width:20px; height:20px}
+.srow .pmain{flex:1; min-width:0}
+.srow .ptitle{font-family:var(--serif); font-size:17px; font-weight:600; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.srow .pmeta{display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-3)}
+.srow .chev{color:var(--ink-3); flex:none} .srow .chev svg{width:18px; height:18px}
+.emptybox{border:1px dashed var(--line-2); border-radius:var(--r); background:var(--surface); padding:52px 24px; text-align:center; color:var(--ink-3)}
+.emptybox .ei{width:46px; height:46px; margin:0 auto 12px; border-radius:12px; background:var(--surface-2); display:grid; place-items:center; color:var(--ink-3)}
+.emptybox b{color:var(--ink-2); font-family:var(--serif); font-size:16px; font-weight:500; display:block; margin-bottom:3px}
+
+.crumb{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-3); margin-bottom:14px}
+.crumb button{border:none; background:transparent; color:var(--ink-2); font-weight:600; display:inline-flex; align-items:center; gap:5px; padding:4px 2px}
+.crumb button:hover{color:var(--ink)} .crumb svg{width:15px; height:15px}
+.eng-head{display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:22px}
+.eng-head > div:first-child{flex:1 1 320px; min-width:0}
+.eng-head h2{font-size:24px}
+.eng-head .hmeta{display:flex; align-items:center; gap:8px; margin-top:7px; flex-wrap:wrap; max-width:100%}
+.eng-head .spacer{flex:1}
+.grid{display:grid; grid-template-columns:320px 1fr; gap:26px; align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.rail{position:sticky; top:82px; display:flex; flex-direction:column; gap:18px}
+@media (max-width:900px){.rail{position:static}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm)}
+.panel .ph{padding:15px 18px 0; display:flex; align-items:center; gap:8px} .panel .ph h3{font-size:15px} .panel .ph .spacer{flex:1}
+.panel .pb{padding:16px 18px}
+
+.dl{display:flex; flex-direction:column; gap:8px}
+.dlrow{display:flex; align-items:center; gap:11px; padding:11px 13px; border:1px solid var(--line-2); border-radius:10px; background:var(--surface); transition:border-color .15s,background .15s}
+.dlrow:hover{border-color:var(--accent); background:var(--accent-soft)}
+.dlrow .fi{width:34px; height:34px; flex:none; border-radius:9px; background:var(--surface-2); display:grid; place-items:center; color:var(--accent)}
+.dlrow .fi svg{width:17px; height:17px}
+.dlrow .dt{flex:1; min-width:0} .dlrow .dt b{font-size:13.5px; display:block} .dlrow .dt span{font-size:11.5px; color:var(--ink-3)}
+.dlrow .dn{color:var(--ink-3)} .dlrow .dn svg{width:16px; height:16px}
+.stats{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border-radius:var(--r); overflow:hidden; border:1px solid var(--line)}
+.stat{background:var(--surface); padding:13px 15px}
+.stat .v{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.1}
+.stat .v.flag{color:var(--flag)}
+.stat .k{font-size:11.5px; color:var(--ink-3); margin-top:2px}
+
+.sec{margin-bottom:16px}
+.sec-h{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+.sec-h h3{font-size:16px} .sec-h .ct{font-size:12px; color:var(--ink-3); font-family:var(--sans); font-weight:400}
+.cs{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); padding:14px 16px; margin-bottom:10px}
+.cs.flag{border-color:var(--flag-line)}
+.cs .csh{display:flex; align-items:flex-start; gap:10px}
+.cs .csh h4{font-size:15px; font-family:var(--serif); font-weight:600; margin:0; flex:1; min-width:0}
+.cs .cite{font-size:11.5px; color:var(--ink-3); font-family:var(--mono); flex:none}
+.cs .prep{margin-top:4px; font-size:12.5px; color:var(--accent); font-weight:600}
+.coats{margin-top:9px; display:flex; flex-direction:column; gap:5px}
+.coat{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink)}
+.coat .dft{font-family:var(--mono); font-size:12px; color:var(--ink-2); background:var(--surface-2); padding:2px 7px; border-radius:6px}
+.limit{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
+.limit:last-child{border-bottom:none}
+.limit .lc{color:var(--ink-2); width:150px; flex:none} .limit .lv{flex:1; color:var(--ink)} .limit .cite{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.hold{display:flex; gap:9px; padding:8px 0; font-size:13px; color:var(--ink)} .hold svg{width:15px;height:15px;color:var(--accent);flex:none;margin-top:2px}
+.review{background:var(--flag-soft); border:1px solid var(--flag-line); border-radius:var(--r); padding:14px 16px; margin-bottom:16px}
+.review h3{font-size:14px; color:var(--flag); display:flex; align-items:center; gap:7px; margin-bottom:8px}
+.review h3 svg{width:15px;height:15px}
+.review ul{margin:0; padding-left:18px; font-size:12.5px; color:var(--ink)} .review li{margin-bottom:4px}
+.review li b{font-family:var(--mono); font-weight:600}
+
+.toasts{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
+.toast{display:flex; align-items:center; gap:9px; background:var(--ink); color:var(--paper); padding:11px 16px; border-radius:11px; box-shadow:var(--shadow-lg); font-size:13.5px; font-weight:500; animation:tin .28s cubic-bezier(.2,.9,.3,1); max-width:90vw}
+.toast svg{width:16px; height:16px; flex:none}
+.toast.ok svg{color:var(--ok)} .toast.err svg{color:var(--danger)}
+@keyframes tin{from{opacity:0; transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important; transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" id="brand" role="button" tabindex="0" aria-label="Home">
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+    <span><span class="name">SpecSentry</span><span class="sub">Cites or flags · never guesses · never prices</span></span>
+  </div>
+  <span class="spacer"></span>
+  <button class="iconbtn" id="themeBtn" aria-label="Toggle color theme"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+</header>
+<main id="app"></main>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<input type="file" id="fileInput" accept="application/pdf" class="sr">
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const state={spec:null,list:[],stats:{}};
+function relTime(iso){ if(!iso)return '—'; const d=(Date.now()-new Date(iso))/1000;
+  if(d<60)return 'just now'; if(d<3600)return Math.floor(d/60)+'m ago'; if(d<86400)return Math.floor(d/3600)+'h ago';
+  if(d<604800)return Math.floor(d/86400)+'d ago'; return new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+const root=document.documentElement; const saved=localStorage.getItem('ss-theme'); if(saved)root.setAttribute('data-theme',saved);
+function isDark(){ return getComputedStyle(root).getPropertyValue('--paper').trim().toLowerCase().startsWith('#16'); }
+function syncTheme(){ $('#themeIcon').innerHTML=isDark()?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>':'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'; }
+$('#themeBtn').onclick=()=>{ const n=isDark()?'light':'dark'; root.setAttribute('data-theme',n); localStorage.setItem('ss-theme',n); syncTheme(); };
+syncTheme(); $('#brand').onclick=()=>location.hash='#/'; $('#brand').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();location.hash='#/';} };
+function toast(msg,kind='ok'){ const t=document.createElement('div'); t.className='toast '+kind;
+  const ic=kind==='err'?'<path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>':'<path d="M20 6 9 17l-5-5"/>';
+  t.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${esc(msg)}`;
+  $('#toasts').appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),320);},3600); }
+
+async function route(){ const h=location.hash.replace(/^#\/?/,''); if(h)await openDetail(h); else await renderHome(); }
+window.addEventListener('hashchange',route);
+
+async function renderHome(){
+  state.spec=null;
+  try{ [state.list,state.stats]=await Promise.all([fetch('/specs').then(r=>r.json()),fetch('/rollup').then(r=>r.json())]); }catch(_){ state.list=[]; state.stats={}; }
+  const s=state.stats||{};
+  $('#app').innerHTML=`<div class="wrap">
+    <div class="page-head"><h1>Specs</h1></div>
+    <div class="dash">
+      <div class="dcard"><div class="v">${s.specs_processed??0}</div><div class="k">Specs processed</div></div>
+      <div class="dcard"><div class="v">${s.pages_read??0}</div><div class="k">Pages read</div></div>
+      <div class="dcard"><div class="v">${s.requirements_extracted??0}</div><div class="k">Requirements extracted</div></div>
+      <div class="dcard"><div class="v flag">${s.review_flags_raised??0}</div><div class="k">Review flags raised</div></div>
+    </div>
+    <div class="dropzone" id="drop" tabindex="0" role="button" aria-label="Upload a spec PDF">
+      <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></div>
+      <b>Drop a coatings spec PDF, or browse</b><span>Page-cited requirements + cost drivers + inspection draft in minutes</span>
+      <div id="dropMsg" style="margin-top:12px"></div>
+    </div>
+    <div class="specs" id="specs"></div></div>`;
+  const drop=$('#drop'), fi=$('#fileInput');
+  drop.onclick=()=>fi.click(); drop.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();fi.click();} };
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f)upload(f); });
+  fi.onchange=()=>{ if(fi.files[0])upload(fi.files[0]); fi.value=''; };
+  renderSpecs();
+}
+function renderSpecs(){
+  const el=$('#specs'); if(!el)return;
+  if(!state.list.length){ el.innerHTML=`<div class="emptybox"><div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></div><b>No specs yet</b>Upload your first coatings spec to get started.</div>`; return; }
+  el.innerHTML=state.list.map(s=>{
+    const flag=s.review_flags?`<span class="chip flag">${s.review_flags} to review</span>`:`<span class="chip ok">clean</span>`;
+    return `<button class="srow" data-job="${esc(s.job)}">
+      <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></span>
+      <span class="pmain"><span class="ptitle">${esc(s.title)}</span>
+        <span class="pmeta">${flag}<span>${s.pages} pages</span><span>· ${s.coat_systems} coat systems</span><span>· ${s.hold_points} hold points</span><span>· ${relTime(s.created)}</span></span></span>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>`;
+  }).join('');
+  el.querySelectorAll('.srow').forEach(r=>r.onclick=()=>location.hash='#/'+r.dataset.job);
+}
+async function upload(file){
+  if(file.type!=='application/pdf'){ toast('PDF only','err'); return; }
+  const dm=$('#dropMsg'); if(dm) dm.innerHTML=`<div class="processing"><span class="spin"></span> Reading ${esc(file.name)} — extracting requirements…</div>`;
+  const fd=new FormData(); fd.append('pdf',file);
+  try{
+    const r=await fetch('/specs',{method:'POST',body:fd});
+    const j=await r.json(); if(!r.ok) throw new Error(j.detail||'processing failed');
+    toast(j.needs_review.length?`Processed — ${j.needs_review.length} flags for review`:'Spec processed');
+    location.hash='#/'+j.job;
+  }catch(err){ if(dm)dm.innerHTML=''; toast(err.message||'Upload failed','err'); }
+}
+
+async function openDetail(job){
+  const r=await fetch('/specs/'+encodeURIComponent(job));
+  if(!r.ok){ toast('Spec not found','err'); location.hash='#/'; return; }
+  state.spec=await r.json(); await refreshStats(); renderDetail();
+}
+async function refreshStats(){ try{ state.stats=await(await fetch('/rollup')).json(); }catch(_){ state.stats={}; } renderStats(); }
+
+function renderDetail(){
+  const sp=state.spec, job=sp.job;
+  const review=sp.needs_review||[];
+  const csHtml=(sp.coat_systems||[]).map(cs=>{
+    const coats=(cs.coats||[]).map(c=>`<div class="coat">${esc(c.product_or_type||'coat')}<span class="dft">${c.dft_min_mils??'?'}–${c.dft_max_mils??'?'} mils</span></div>`).join('');
+    return `<div class="cs ${cs.flag?'flag':''}"><div class="csh"><h4>${esc(cs.surface||'—')}</h4><span class="cite">${esc(cs.page||'no cite')}</span></div>
+      ${cs.prep_standard?`<div class="prep">${esc(cs.prep_standard)}</div>`:''}<div class="coats">${coats||'<div style="font-size:12.5px;color:var(--ink-3)">no coats parsed</div>'}</div></div>`;
+  }).join('') || `<div style="font-size:13px;color:var(--ink-3)">No coat systems extracted.</div>`;
+  const envHtml=(sp.environmental_limits||[]).map(e=>`<div class="limit"><span class="lc">${esc(e.condition||'—')}</span><span class="lv">${esc(e.limit||'—')}</span><span class="cite">${esc(e.page||'')}</span></div>`).join('')||`<div style="font-size:13px;color:var(--ink-3)">None.</div>`;
+  const holdHtml=(sp.hold_points||[]).map(h=>`<div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>${esc(h.point||'—')} <span class="cite" style="font-family:var(--mono);color:var(--ink-3);font-size:11px">${esc(h.page||'')}</span></span></div>`).join('')||`<div style="font-size:13px;color:var(--ink-3)">None.</div>`;
+  $('#app').innerHTML=`<div class="wrap">
+    <div class="crumb"><button id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Specs</button><span>/</span><span>${esc(sp.title||job)}</span></div>
+    <div class="eng-head"><div><h2>${esc(sp.title||job)}</h2>
+      <div class="hmeta"><span class="chip neutral">${sp.pages} pages · ${sp.sections} sections</span>
+        ${review.length?`<span class="chip flag">${review.length} to review</span>`:`<span class="chip ok">clean</span>`}
+        <span class="chip neutral">${sp.guard_violations} price-guard catches</span></div></div>
+      <span class="spacer"></span></div>
+    <div class="grid">
+      <aside class="rail">
+        <div class="panel"><div class="ph"><h3>Deliverables</h3></div><div class="pb"><div class="dl">
+          ${dlRow(job,'requirements.csv','Requirements sheet','page-cited, flagged','text/csv')}
+          ${dlRow(job,'cost-drivers.csv','Cost-driver checklist','blank prices — you price','text/csv')}
+          ${dlRow(job,'inspection.docx','Inspection package','watermarked DRAFT','docx')}
+        </div></div></div>
+        <div class="panel"><div class="ph"><h3>Extraction scoreboard</h3></div><div class="pb"><div class="stats" id="stats"></div></div></div>
+      </aside>
+      <section>
+        ${review.length?`<div class="review"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Needs human review (${review.length})</h3><ul>${review.slice(0,40).map(r=>`<li><b>${esc(r.entry)}</b> — ${esc(r.reason)}</li>`).join('')}</ul></div>`:''}
+        <div class="sec"><div class="sec-h"><h3>Coat systems</h3><span class="ct">${(sp.coat_systems||[]).length}</span></div>${csHtml}</div>
+        <div class="sec"><div class="sec-h"><h3>Environmental limits</h3><span class="ct">${(sp.environmental_limits||[]).length}</span></div><div class="panel"><div class="pb">${envHtml}</div></div></div>
+        <div class="sec"><div class="sec-h"><h3>Hold points</h3><span class="ct">${(sp.hold_points||[]).length}</span></div><div class="panel"><div class="pb">${holdHtml}</div></div></div>
+      </section></div></div>`;
+  $('#backBtn').onclick=()=>location.hash='#/';
+  renderStats();
+}
+function dlRow(job,file,title,sub){
+  return `<a class="dlrow" href="/specs/${encodeURIComponent(job)}/${file}"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></span><span class="dt"><b>${esc(title)}</b><span>${esc(sub)}</span></span><span class="dn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span></a>`;
+}
+function renderStats(){
+  const el=$('#stats'); if(!el)return; const s=state.stats||{};
+  const cells=[['Specs',s.specs_processed??0,''],['Requirements',s.requirements_extracted??0,''],['Review flags',s.review_flags_raised??0,'flag'],['Price catches',s.price_guard_catches??0,'']];
+  el.innerHTML=cells.map(([k,v,c])=>`<div class="stat"><div class="v ${c}">${esc(v)}</div><div class="k">${k}</div></div>`).join('');
+}
+route();
+</script>
+</body>
+</html>

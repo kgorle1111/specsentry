@@ -3,6 +3,7 @@
 
 # client data — specs are bid-confidential
 uploads/
+data/
 deliverables/
 receipts.jsonl
 evals/results/

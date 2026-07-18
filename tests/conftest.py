@@ -20,6 +20,7 @@ def isolate_files(tmp_path, monkeypatch):
     monkeypatch.setattr(receipt, "LOG", tmp_path / "receipts.jsonl")
     monkeypatch.setattr(deliverables, "OUT", tmp_path / "deliverables")
     monkeypatch.setattr(main, "UPLOADS", tmp_path / "uploads")
+    monkeypatch.setattr(main, "DATA", tmp_path / "data")
     monkeypatch.setattr(main, "_SPECS", {})
     return tmp_path
 

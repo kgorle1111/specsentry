@@ -19,26 +19,80 @@ Trust boundaries
       a 300-page ingest.
 """
 import asyncio
+import json
 import re
 import uuid
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse
 
 from app import deliverables, extract, ingest, receipt
 
 load_dotenv()
-app = FastAPI(title="specsentry")
 
+ROOT = Path(__file__).resolve().parent.parent
+STATIC = Path(__file__).resolve().parent / "static"
 MAX_BYTES = 40 * 1024 * 1024
 # Spend + wall-clock ceiling: 80 sections ≈ 300 pages ≈ ~$2 of extraction. A
 # bigger spec is almost certainly a merged bid package — split it, don't pay it.
 MAX_SECTIONS = 80
-UPLOADS = Path(__file__).resolve().parent.parent / "uploads"
+UPLOADS = ROOT / "uploads"
+DATA = ROOT / "data"                      # per-spec JSON snapshots (durable list)
 
 _SPECS: dict[str, dict] = {}
+
+
+def _persist(job: str) -> None:
+    """Snapshot a processed spec to disk so the list survives a restart."""
+    rec = _SPECS.get(job)
+    if not rec:
+        return
+    DATA.mkdir(exist_ok=True)
+    (DATA / f"{job}.json").write_text(json.dumps(rec))
+
+
+def load_all() -> int:
+    """Rehydrate processed specs from data/ on startup. No-op if absent."""
+    if not DATA.exists():
+        return 0
+    n = 0
+    for f in DATA.glob("*.json"):
+        try:
+            rec = json.loads(f.read_text())
+            _SPECS[rec["job"]] = rec
+            n += 1
+        except (json.JSONDecodeError, KeyError):
+            continue
+    return n
+
+
+def summarize(rec: dict) -> dict:
+    """List-view summary of a processed spec."""
+    return {
+        "job": rec["job"],
+        "title": rec.get("title") or rec["job"],
+        "pages": rec.get("pages", 0),
+        "sections": rec.get("sections", 0),
+        "coat_systems": len(rec.get("coat_systems", [])),
+        "environmental_limits": len(rec.get("environmental_limits", [])),
+        "hold_points": len(rec.get("hold_points", [])),
+        "review_flags": len(rec.get("needs_review", [])),
+        "guard_violations": rec.get("guard_violations", 0),
+        "created": rec.get("created"),
+    }
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    load_all()  # rehydrate processed specs so the list survives a restart
+    yield
+
+
+app = FastAPI(title="specsentry", lifespan=lifespan)
 
 
 def merge_sections(results: list[dict]) -> dict:
@@ -101,11 +155,21 @@ async def upload_spec(pdf: UploadFile = File(...)):
     for n in low_pages:  # hybrid PDFs: scanned pages are visible, not silent
         merged["needs_review"].append({"entry": f"page {n}",
                                        "reason": "little/no extractable text — likely a scanned drawing; read manually"})
-    _SPECS[job] = {"job": job, "pages": len(pages), "sections": len(sections), **merged}
+    title = re.sub(r"-[a-f0-9]{6}$", "", job).replace("_", " ").replace("-", " ").strip() or job
+    _SPECS[job] = {"job": job, "title": title, "created": datetime.now(timezone.utc).isoformat(),
+                   "pages": len(pages), "sections": len(sections), **merged}
+    _persist(job)
     receipt.log_spec(job, len(pages), len(sections), len(merged["coat_systems"]),
                      len(merged["environmental_limits"]), len(merged["hold_points"]),
                      len(merged["needs_review"]), merged["guard_violations"])
     return _SPECS[job]
+
+
+@app.get("/specs")
+def list_specs():
+    """Processed-spec list for the home view — newest first."""
+    return sorted((summarize(r) for r in _SPECS.values()),
+                  key=lambda s: s["created"] or "", reverse=True)
 
 
 @app.get("/specs/{job}")
@@ -138,34 +202,6 @@ def inspection(job: str):
                         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
-# kn: one-page demo UI — upload, see extraction + flags, grab the three deliverables.
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def index():
-    return """<!doctype html><html><head><meta charset="utf-8"><title>SpecSentry</title>
-<style>body{font-family:system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#1a202c}
-.flag{color:#b45309;font-weight:600}.box{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:.6rem 0}</style>
-</head><body><h1>SpecSentry</h1>
-<p>Upload an industrial coatings spec PDF → page-cited requirements sheet, compliance cost-driver
-checklist (you price it), and a draft inspection package. Extraction cites or flags — never guesses.</p>
-<form id="f" enctype="multipart/form-data"><input type="file" name="pdf" accept="application/pdf" required>
-<button>Process spec</button></form><div id="out"></div>
-<script>
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-document.getElementById('f').onsubmit=async e=>{e.preventDefault();
- document.getElementById('out').innerHTML='processing…';
- const r=await fetch('/specs',{method:'POST',body:new FormData(e.target)});
- const j=await r.json();
- if(!r.ok){document.getElementById('out').innerHTML=`<p class="flag">${esc(j.detail)}</p>`;return;}
- let h=`<div class="box"><h2>${esc(j.job)} — ${j.pages} pages, ${j.sections} sections</h2>
- <p>${j.coat_systems.length} coat systems · ${j.environmental_limits.length} env limits ·
- ${j.hold_points.length} hold points · <span class="flag">${j.needs_review.length} review flags</span> ·
- ${j.guard_violations} price-guard catches</p>
- <p><a href="/specs/${j.job}/requirements.csv">requirements.csv</a> ·
- <a href="/specs/${j.job}/cost-drivers.csv">cost-drivers.csv</a> ·
- <a href="/specs/${j.job}/inspection.docx">inspection-draft.docx</a> · <a href="/rollup">rollup</a></p>`;
- for(const cs of j.coat_systems){h+=`<p><b>${esc(cs.surface)}</b> — ${esc(cs.prep_standard)} (${esc(cs.page)})<br>`+
-  cs.coats.map(c=>`${esc(c.product_or_type)} ${c.dft_min_mils}-${c.dft_max_mils} mils`).join('; ')+`</p>`;}
- if(j.needs_review.length){h+=`<h3 class="flag">Needs human review</h3><ul>`+
-  j.needs_review.map(r=>`<li>${esc(r.entry)}: ${esc(r.reason)}</li>`).join('')+`</ul>`;}
- h+=`</div>`;document.getElementById('out').innerHTML=h;};
-</script></body></html>"""
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
