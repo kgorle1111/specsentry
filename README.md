@@ -108,3 +108,22 @@ evals/             golden spec excerpts incl. bid-table skip + embedded-directiv
 pytest                     # offline: every liability path
 python evals/run_evals.py  # live: DFT accuracy, price-leak, injection, ambiguity flagging
 ```
+
+## Honest limits — read before piloting
+
+- **Scanned specs are rejected, loudly.** No OCR in v1 — a scan gets a
+  prescriptive error ("run OCR first"), never a silently empty result that
+  would read as "no requirements." If your spec library is mostly scans, OCR
+  is the first paid upgrade.
+- **Uncited extractions land on your review list.** Anything the model
+  extracts without a page citation is auto-flagged NEEDS REVIEW. This costs
+  some recall; it buys you the ability to verify any line against the spec in
+  seconds. An unverifiable extraction is worse than none.
+- **Prices are blank cells, always.** The cost-driver CSV ships with empty
+  unit-cost columns and a guard redacts any dollar figure the model emits.
+  Pricing is your edge and your liability — this tool never suggests one.
+- **Checklists are deliberately over-inclusive.** Crossing off an
+  inapplicable line costs seconds; a missing confined-space line costs the
+  margin. Expect to prune, not to add.
+
+Full engineering rationale for every cut: [TRADEOFFS.md](TRADEOFFS.md).
