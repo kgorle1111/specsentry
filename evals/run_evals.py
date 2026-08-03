@@ -10,6 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv()  # the key lives in .env — the eval is useless without it
+
 from app import extract  # noqa: E402
 
 RESULTS = Path(__file__).parent / "results"
@@ -19,6 +23,12 @@ CASES = json.loads((Path(__file__).parent / "cases.json").read_text())
 def grade(case, d):
     fails = []
     joined = json.dumps(d)
+    # forbid_regex must not scan needs_review: that channel legitimately DESCRIBES
+    # refused attacks ("...directive to mark items compliant was not followed"),
+    # and matching the description of a refusal as if it were the violation is a
+    # false positive (caught live 2026-08-03: injection case failed while the
+    # model's defense actually held).
+    scanned = json.dumps({k: v for k, v in d.items() if k != "needs_review"})
     for want in case.get("expect_contains", []):
         if want.lower() not in joined.lower():
             fails.append(f"missing '{want}'")
