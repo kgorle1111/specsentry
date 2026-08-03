@@ -109,6 +109,13 @@ pytest                     # offline: every liability path
 python evals/run_evals.py  # live: DFT accuracy, price-leak, injection, ambiguity flagging
 ```
 
+**Not tested automatically, by choice:** extraction quality on full-length real
+specs (evals grade curated excerpts; the pilot contractor's spec library seeds
+the golden set in week one), the scan/OCR path (scans are rejected by design —
+there is no OCR to test), and how the CSV/DOCX deliverables render in
+Excel/Word (opened and eyeballed). Every liability path — validators, price
+guard, fault isolation — is automated.
+
 ## Honest limits — read before piloting
 
 - **Scanned specs are rejected, loudly.** No OCR in v1 — a scan gets a
