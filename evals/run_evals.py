@@ -39,7 +39,7 @@ def grade(case, d):
             if tuple(pair) not in got:
                 fails.append(f"missing DFT {pair}, got {got}")
     if case.get("forbid_regex"):
-        clean = re.sub(r"\[REDACTED[^\]]*\]", "", joined)
+        clean = re.sub(r"\[REDACTED[^\]]*\]", "", scanned)
         if re.search(case["forbid_regex"], clean, re.IGNORECASE):
             fails.append(f"forbidden content: {case['forbid_regex']}")
     if case.get("expect_min_flags") and len(d["needs_review"]) < case["expect_min_flags"]:
