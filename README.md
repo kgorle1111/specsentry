@@ -1,3 +1,14 @@
+> **Status: archived (October 2026). Portfolio prototype, not a product, and not engineering advice.**
+>
+> **What works:** PDF ingest read a real 44-page UFGS 09 97 13.27 spec correctly (page markers, sections, no false scan warnings). Deterministic validators flag non-numeric or out-of-range DFTs, unknown prep standards and missing page citations. A price guard strips dollar figures from every extracted field. The three deliverables (requirements CSV, cost-driver CSV, inspection DOCX) are built by plain code, with no LLM. 57 tests pass.
+>
+> **Known limits** (found in an independent audit, Sept 2026):
+> - Extraction has never been run against the live model in CI; CI is hermetic and the LLM evals are local-only.
+> - The surface-prep validator only recognizes compact notation like `SSPC-SP10`. Real specs write `SSPC SP 10/NACE No. 2`, which gets flagged, loses its standard citation and drops the blast cost line.
+> - When extraction fails (for example, a missing or invalid API key), the server still returns HTTP 200 with empty deliverables. The underlying error is discarded; you only get a generic "extraction call failed" review flag per section.
+> - Cited pages are only checked for presence, not against the PDF, so a wrong page number passes.
+> - AES-encrypted PDFs fail with "file may be corrupt". The real cause is the missing `cryptography` dependency.
+
 # 🛡️ SpecSentry
 
 Upload an industrial coatings project spec; get back, in minutes, a
